@@ -1,15 +1,28 @@
 package main
 
 import (
+	elastic "gopkg.in/olivere/elastic.v3"
 	"fmt"
 	"net/http"
 	"encoding/json"
 	"log"
 	"strconv"
+	"reflect"
+	"github.com/pborman/uuid"
 )
 
+// 9/16/2017
+// IP is a AWS EC2 Image IP
 const (
+	INDEX = "around"
+	TYPE = "post"
 	DISTANCE = "200km"
+	// Needs to update
+	//PROJECT_ID = "around-xxx"
+	//BT_INSTANCE = "around-post"
+	// deploy it to cloud, use ElasticSearch on EC2
+	ES_URL = "http://34.213.239.117:9200"
+
 )
 
 type Location struct {
@@ -25,6 +38,39 @@ type Post struct {	// struct: likewise, Java class
 }
 
 func main() {
+	// Create a client
+	client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	// Use the IndexExists service to check if a specified index exists.
+	exists, err := client.IndexExists(INDEX).Do()
+	if err != nil {
+		panic(err)
+	}
+	if !exists {
+		// Create a new index.
+		mapping := `{
+                    "mappings":{
+                           "post":{
+                                  "properties":{
+                                         "location":{
+                                                "type":"geo_point"
+                                         }
+                                  }
+                           }
+                    }
+             }
+             `
+		_, err := client.CreateIndex(INDEX).Body(mapping).Do()
+		if err != nil {
+			// Handle error
+			panic(err)
+		}
+	}
+
 	fmt.Println("started-service")
 	http.HandleFunc("/post", handlerPost)		// url mapping
 	http.HandleFunc("/search", handlerSearch)     // add an url mapping
@@ -46,8 +92,52 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {	// deal with POST ope
 		return
 	}
 
+	/*
+	// Example: Add a document to the index
+	tweet := Tweet{User: "olivere", Message: "Take Five"}
+	_, err = client.Index().
+		Index("twitter").
+		Type("tweet").
+		Id("1").
+		BodyJson(tweet).
+		Refresh(true).
+		Do(ctx)
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+	*/
+
+
+	// Create a client
+	es_client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	id := uuid.New()	//  generate  random number
+
+	// Save it to index
+	_, err = es_client.Index().
+		Index(INDEX).
+		Type(TYPE).
+		Id(id).
+		BodyJson(p).
+		Refresh(true).
+		Do()
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	fmt.Printf("Post is saved to Index: %s\n", p.Message)
+
 	fmt.Fprintf(w, "Post received: %s\n", p.Message)
 }
+
+
+
 
 /*
 // a simple handlerSearch example
@@ -60,6 +150,8 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 }
 */
 
+/*
+ * handlerSearch for 19th
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request for search")
 	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)    // cast String into 64bit float
@@ -87,6 +179,79 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	js, err := json.Marshal(p)    // xuliehua, cast into JSON format !!!
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+*/
+
+
+// use KD tree to check search result, see if it's within 200km of the post position
+func handlerSearch(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Received one request for search")
+	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
+	lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
+
+	// range is optional
+	ran := DISTANCE
+	if val := r.URL.Query().Get("range"); val != "" {
+		ran = val + "km"
+	}
+
+	// fmt.Printf(w, "Search received: %f %f %s", lat, lon, ran)
+	// error: cannot use w (type http.ResponseWriter) as type string in argument to fmt.Printf
+
+	fmt.Printf("Search received: %f %f %s", lat, lon, ran)
+
+	// below is different
+	// use GeoIndex to implement KD tree ALG to do diatance range filter
+
+	// Create a client
+	client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	// Define geo distance query as specified in
+	// https://www.elastic.co/guide/en/elasticsearch/reference/5.2/query-dsl-geo-distance-query.html
+	q := elastic.NewGeoDistanceQuery("location")
+	q = q.Distance(ran).Lat(lat).Lon(lon)   // from IOS front end
+
+	// Some delay may range from seconds to minutes.
+	searchResult, err := client.Search().
+		Index(INDEX).
+		Query(q).
+		Pretty(true).
+		Do()
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
+	// searchResult is of type SearchResult and returns hits, suggestions,
+	// and all kinds of other information from Elasticsearch.
+	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	// TotalHits is another convenience function that works even when something goes wrong.
+	fmt.Printf("Found a total of %d post\n", searchResult.TotalHits())
+
+	// Each is a convenience function that iterates over hits in a search result.
+	// It makes sure you don't need to check for nil values in the response.
+	// However, it ignores errors in serialization.
+	var typ Post
+	var ps []Post
+	for _, item := range searchResult.Each(reflect.TypeOf(typ)) {
+		p := item.(Post)
+		fmt.Printf("Post by %s: %s at lat %v and lon %v\n", p.User, p.Message, p.Location.Lat, p.Location.Lon)
+		// TODO(vincent): Perform filtering based on keywords such as web spam etc.
+		ps = append(ps, p)
+
+	}
+	js, err := json.Marshal(ps)	// serialize into JSON
 	if err != nil {
 		panic(err)
 		return
