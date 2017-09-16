@@ -1,2 +1,2 @@
 runtime: go
-ebv: flex
+env: flex
