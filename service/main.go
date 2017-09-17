@@ -20,8 +20,9 @@ const (
 	TYPE = "post"
 	DISTANCE = "200km"
 
+	// start a GCE instance -> get PROJECT_ID
 	// set a BigTable instance in GCP
-	PROJECT_ID = "around-post"
+	PROJECT_ID = "analog-ship-179904"
 	BT_INSTANCE = "around-post"
 
 	// deploy it to cloud, use ElasticSearch on EC2
@@ -136,7 +137,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {	// deal with POST ope
 	}
 
 	fmt.Printf("Post is saved to Index: %s\n", p.Message)
-	fmt.Fprintf(w, "Post to Index received: %s\n", p.Message)
+	// fmt.Fprintf(w, "Post to Index received: %s\n", p.Message)
 
 
 
@@ -165,7 +166,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {	// deal with POST ope
 		return
 	}
 	fmt.Printf("Post is saved to BigTable: %s\n", p.Message)
-	fmt.Fprintf(w, "Post to BigTable received: %s\n", p.Message)
+	// fmt.Fprintf(w, "Post to BigTable received: %s\n", p.Message)
 
 
 }
