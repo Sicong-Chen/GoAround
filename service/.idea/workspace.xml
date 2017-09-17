@@ -18,8 +18,8 @@
       <file leaf-file-name="main.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+            <state relative-caret-position="1260">
+              <caret line="167" column="63" lean-forward="true" selection-start-line="167" selection-start-column="63" selection-end-line="167" selection-end-column="63" />
               <folding>
                 <element signature="e#14#198#0" expanded="true" />
               </folding>
@@ -53,6 +53,7 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
+    <option name="x" value="-3" />
     <option name="y" value="23" />
     <option name="width" value="1280" />
     <option name="height" value="773" />
@@ -363,7 +364,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1280" height="773" extended-state="6" />
+    <frame x="-3" y="23" width="1280" height="773" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -476,8 +477,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+        <state relative-caret-position="1260">
+          <caret line="167" column="63" lean-forward="true" selection-start-line="167" selection-start-column="63" selection-end-line="167" selection-end-column="63" />
           <folding>
             <element signature="e#14#198#0" expanded="true" />
           </folding>

@@ -19,9 +19,11 @@ const (
 	INDEX = "around"
 	TYPE = "post"
 	DISTANCE = "200km"
-	// Needs to update
+
+	// set a BigTable instance in GCP
 	PROJECT_ID = "around-post"
 	BT_INSTANCE = "around-post"
+
 	// deploy it to cloud, use ElasticSearch on EC2
 	ES_URL = "http://34.213.239.117:9200"
 
