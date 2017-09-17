@@ -8,6 +8,8 @@ import (
 	"log"
 	"strconv"
 	"reflect"
+	"context"
+	"cloud.google.com/go/bigtable"
 	"github.com/pborman/uuid"
 )
 
@@ -18,8 +20,8 @@ const (
 	TYPE = "post"
 	DISTANCE = "200km"
 	// Needs to update
-	//PROJECT_ID = "around-xxx"
-	//BT_INSTANCE = "around-post"
+	PROJECT_ID = "around-post"
+	BT_INSTANCE = "around-post"
 	// deploy it to cloud, use ElasticSearch on EC2
 	ES_URL = "http://34.213.239.117:9200"
 
@@ -132,8 +134,38 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {	// deal with POST ope
 	}
 
 	fmt.Printf("Post is saved to Index: %s\n", p.Message)
+	fmt.Fprintf(w, "Post to Index received: %s\n", p.Message)
 
-	fmt.Fprintf(w, "Post received: %s\n", p.Message)
+
+
+	// Post to BigTable
+	ctx := context.Background()
+	// update project name here
+	bt_client, err := bigtable.NewClient(ctx, PROJECT_ID, BT_INSTANCE)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	// TODO: save Post into BT as well
+	tbl := bt_client.Open("post")
+	mut := bigtable.NewMutation()
+	t := bigtable.Now()
+
+	mut.Set("post", "user", t, []byte(p.User))
+	mut.Set("post", "message", t, []byte(p.Message))
+	mut.Set("location", "lat", t, []byte(strconv.FormatFloat(p.Location.Lat, 'f', -1, 64)))
+	mut.Set("location", "lon", t, []byte(strconv.FormatFloat(p.Location.Lon, 'f', -1, 64)))
+
+	err = tbl.Apply(ctx, id, mut)
+	if err != nil {
+		panic(err)
+		return
+	}
+	fmt.Printf("Post is saved to BigTable: %s\n", p.Message)
+	fmt.Fprintf(w, "Post to BigTable received: %s\n", p.Message)
+
+
 }
 
 
