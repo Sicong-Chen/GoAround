@@ -26,7 +26,7 @@ const (
 	BT_INSTANCE = "around-post"
 
 	// deploy it to cloud, use ElasticSearch on EC2
-	ES_URL = "http://34.213.239.117:9200"
+	ES_URL = "http://172.31.44.127:9200"
 
 )
 
@@ -150,13 +150,26 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {	// deal with POST ope
 		return
 	}
 
+	/*
+	Based on what Google document, how to save our Post into BT?
+	tbl := client.Open("mytable")
+	mut := bigtable.NewMutation()
+	mut.Set("links", "maps.google.com", bigtable.Now(), []byte("1"))
+	mut.Set("links", "golang.org", bigtable.Now(), []byte("1"))
+	err := tbl.Apply(ctx, "com.google.cloud", mut)
+	*/
+
+
+
 	// TODO: save Post into BT as well
 	tbl := bt_client.Open("post")
 	mut := bigtable.NewMutation()
 	t := bigtable.Now()
 
+	// column family - post
 	mut.Set("post", "user", t, []byte(p.User))
 	mut.Set("post", "message", t, []byte(p.Message))
+	// column family - location
 	mut.Set("location", "lat", t, []byte(strconv.FormatFloat(p.Location.Lat, 'f', -1, 64)))
 	mut.Set("location", "lon", t, []byte(strconv.FormatFloat(p.Location.Lon, 'f', -1, 64)))
 
