@@ -20,12 +20,12 @@ const (
 	TYPE = "post"
 	DISTANCE = "200km"
 
-	// start a GCE instance -> get PROJECT_ID
-	// set a BigTable instance in GCP
+	// start a GCE instance -> to use ElasticSearch -> get PROJECT_ID
+	// In this case, ES is implemented by AWS EC2
 	PROJECT_ID = "analog-ship-179904"
+	// set a BigTable instance in GCP
 	BT_INSTANCE = "around-post"
-
-	// deploy it to cloud, use ElasticSearch on EC2
+	// deploy it to AWS EC2, use ElasticSearch(which is on GAE - one of the Go service) on EC2
 	ES_URL = "http://172.31.44.127:9200"
 
 )
