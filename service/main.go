@@ -26,7 +26,7 @@ const (
 	// set a BigTable instance in GCP
 	BT_INSTANCE = "around-post"
 	// deploy it to AWS EC2, use ElasticSearch(which is on GAE - one of the Go service) on EC2
-	ES_URL = "http://172.31.44.127:9200"
+	ES_URL = "http://34.213.92.223:9200"
 
 )
 
